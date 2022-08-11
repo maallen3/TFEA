@@ -27,6 +27,7 @@ import math
 import pathlib
 import ujson
 import shutil
+import pandas
 from scipy import stats
 from multiprocessing import Manager
 
@@ -324,6 +325,7 @@ def auc_simulate_and_plot(distances, use_config=True, output_type=None,
         #sort distances based on the ranks from TF bed file
         #and calculate the absolute distance
         motif = distances[0]
+        print (motif)
         nan = float('Nan')
         gc = nan
         if fimo_motifs:
@@ -335,12 +337,18 @@ def auc_simulate_and_plot(distances, use_config=True, output_type=None,
         except KeyError:
             fpkm = nan
         distances = distances[1:]
+        tempdir = config.vars['TEMPDIR']
+        print("tempdir", tempdir)
+        print("distances", len(distances))
         distances_abs = [abs(x)  if x != '.' else x for x in distances]
-
+        print("distances_abs", len(distances_abs))
         hits = len([x for x in distances_abs if x != '.'])
 
         #Filter any TFs/files without any hits
         if hits == 0:
+            #list_of_tuples = list(zip(distances, distances_abs))
+            #df = pandas.DataFrame(list_of_tuples, columns = ['distances', 'distances_abs'])
+            #df.to_csv(str(tempdir)+"/"+str(motif)+"__dis.csv")        
             return [motif, 0, 0, hits, gc, fpkm, 0, 0]
 
         #Get -exp() of distance and get cumulative scores
@@ -351,30 +359,39 @@ def auc_simulate_and_plot(distances, use_config=True, output_type=None,
         #In the case where there are no hits in the middle two quartiles, then
         #don't perform computation
         if len(middledistancehist) == 0:
+            #list_of_tuples = list(zip(distances, distances_abs))
+            #df = pandas.DataFrame(list_of_tuples, columns = ['distances', 'distances_abs'])
+            #df.to_csv(str(tempdir)+"/"+str(motif)+"__dis.csv")
             return [motif, 0, 0, hits, gc, fpkm, 0, 0]
         try:
             average_distance = np.mean(middledistancehist)#float(sum(middledistancehist))/float(len(middledistancehist))
         except ZeroDivisionError:
+            #list_of_tuples = list(zip(distances, distances_abs))
+            #df = pandas.DataFrame(list_of_tuples, columns = ['distances', 'distances_abs'])
+            #df.to_csv(str(tempdir)+"/"+str(motif)+"__dis.csv")
             return [motif, 0, 0, hits, gc, fpkm, 0, 0]
         
         score = [math.exp(-float(x)/average_distance) if x != '.' else 0.0 for x in distances_abs]
         total = np.sum(score)
-
+        print ("score", len(score))
         binwidth = 1.0/float(len(distances_abs))
         normalized_score = np.multiply(np.divide(score, total), binwidth)
         #[(float(x)/total)*binwidth for x in score]
+        print ("normalized_score", type(normalized_score), normalized_score.shape)
         cumscore = np.cumsum(normalized_score)
+        print ("cumscore", type(cumscore), cumscore.shape)
         trend = np.append(np.arange(0,1,1.0/float(len(cumscore) - 1)), 1.0)
         trend = np.multiply(trend, binwidth)
         # trend = [x*binwidth for x in trend]
-
+        
         #The AUC is the relative to the "random" line
         auc = (np.trapz(cumscore) - np.trapz(trend))*2
+        print ("auc", type(auc), auc)
         offset = 0
         if motif in gc_correct:
             offset = gc_correct[motif]
         corrected_auc = auc - offset
-
+        
         #Calculate random AUC
         if bootstrap:
             sim_auc = permute_auc_bootstrap(original_distances=distances, trend=trend, 
@@ -420,6 +437,12 @@ def auc_simulate_and_plot(distances, use_config=True, output_type=None,
         # current exception being handled.
         print(traceback.print_exc())
         raise e
+    list_of_tuples = list(zip(distances, distances_abs))
+    df = pandas.DataFrame(list_of_tuples, columns = ['distances', 'distances_abs'])
+    df["score"]=score
+    df["normalized_score"]=normalized_score
+    df["cumscore"]=cumscore
+    df.to_csv(str(tempdir)+"/withAUC"+str(motif)+"__dis_andmore.csv")
     return [motif, auc, corrected_auc, hits, gc, fpkm, p, corrected_p]
 
 #==============================================================================
