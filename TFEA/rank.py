@@ -583,7 +583,8 @@ def write_deseq_script(bam1=None, bam2=None, tempdir=None, count_file=None,
     #If more than 1 replicate, use DE-Seq2
     if (len(bam1) > 1 and len(bam2) > 1):
         Rfile = open(tempdir / 'DESeq.R','w')
-        Rfile.write('''library("DESeq2")
+        Rfile.write('''version
+library("DESeq2")
 data <- read.delim("'''+count_file.as_posix()+'''", sep="\t", header=TRUE)
 countsTable <- subset(data, select=c('''
                 +', '.join([str(i) for i in range(5,5+len(bam1)+len(bam2))])
@@ -623,7 +624,8 @@ write.table(res, file = "'''    + (tempdir / 'DESeq.res.txt').as_posix()
 sink()''')
     else:
         Rfile = open(tempdir /  'DESeq.R','w')
-        Rfile.write('''library("DESeq")
+        Rfile.write('''version
+library("DESeq")
 data <- read.delim("'''+count_file.as_posix()+'''", sep="\t", header=TRUE)
 
 countsTable <- subset(data, select=c('''
