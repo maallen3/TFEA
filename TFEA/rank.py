@@ -584,6 +584,7 @@ def write_deseq_script(bam1=None, bam2=None, tempdir=None, count_file=None,
     if (len(bam1) > 1 and len(bam2) > 1):
         Rfile = open(tempdir / 'DESeq.R','w')
         Rfile.write('''version
+R.home()
 library("DESeq2")
 data <- read.delim("'''+count_file.as_posix()+'''", sep="\t", header=TRUE)
 countsTable <- subset(data, select=c('''
@@ -625,6 +626,7 @@ sink()''')
     else:
         Rfile = open(tempdir /  'DESeq.R','w')
         Rfile.write('''version
+R.home()
 library("DESeq")
 data <- read.delim("'''+count_file.as_posix()+'''", sep="\t", header=TRUE)
 
