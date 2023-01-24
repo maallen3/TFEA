@@ -13,14 +13,16 @@ __version__ = '4.0'
 def run():
     #Imports
     #==============================================================================
+    import os
     import sys
     import subprocess
     import shutil
     from pathlib import Path
+    print ("path at the begining", os.environ['PATH'])
     #Add TFEA srcdirectory into path
     srcdirectory = Path(__file__).absolute().parent
     sys.path.insert(0, srcdirectory)
-
+    print ("after first modification", os.environ['PATH'])
     from TFEA import process_inputs
 
     #ARGUMENT PARSING

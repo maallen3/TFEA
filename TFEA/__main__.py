@@ -12,8 +12,10 @@ __version__ = '4.0'
 
 #Imports
 #==============================================================================
+import os
 import sys
 from pathlib import Path
+print ("path at the very begining", os.environ['PATH'])
 # Add TFEA srcdirectory into path
 srcdirectory = Path(__file__).absolute().parent
 sys.path.insert(0, srcdirectory)

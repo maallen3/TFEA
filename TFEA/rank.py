@@ -667,6 +667,7 @@ def deseq(bam1=None, bam2=None, tempdir=None, count_file=None, label1=None,
     deseqR = tempdir / "DESeq.R"
     deseqout = tempdir / 'DESeq.Rout'
     deseq_file = tempdir / 'DESeq.res.txt'
+    print ("path before Rscript", os.environ['PATH'])
     with open(deseqout, 'w') as output:
         exitcode = subprocess.run(["Rscript", deseqR], stdout=output,
                                     stderr=output)
